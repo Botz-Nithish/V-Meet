@@ -27,3 +27,8 @@ jobs:
           cd frontend/cloud-front
           npm install
           npm run build
+      - name: Upload Frontend Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend_dist
+          path: frontend/cloud-front/dist
