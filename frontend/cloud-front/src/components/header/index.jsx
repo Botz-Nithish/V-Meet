@@ -11,7 +11,7 @@ const Header = () => {
 
   try {
     if (userCookie) user = JSON.parse(userCookie);
-  } catch (err) {
+  } catch {
     console.error("Invalid user cookie");
   }
 
@@ -29,19 +29,46 @@ const Header = () => {
   if (!user) return null;
 
   return (
-    <header className=" text-white flex justify-start items-center p-4">
-      <div className="relative ml-auto">
+    <header className="bg-white border-b border-lime-200 shadow-sm flex justify-between items-center px-6 py-3">
+      {/* App Logo / Name */}
+      <div
+        onClick={() => navigate(user.isTeacher ? "/teacher" : "/student")}
+        className="text-2xl font-extrabold text-lime-600 cursor-pointer select-none"
+      >
+        V-Meet
+      </div>
+
+      {/* Profile Dropdown */}
+      <div className="relative">
         <button
           onClick={() => setDropdownOpen(!dropdownOpen)}
-          className="bg-purple-600 hover:bg-purple-500 px-4 py-2 rounded-md focus:outline-none"
+          className="flex items-center gap-2 bg-lime-600 hover:bg-lime-700 text-white px-4 py-2 rounded-md font-medium transition-all focus:outline-none"
         >
-          {user.fullname} ▼
+          <span>{user.fullname}</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.8}
+            stroke="currentColor"
+            className="w-4 h-4"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
+          </svg>
         </button>
+
+        {/* Dropdown Menu */}
         {dropdownOpen && (
-          <div className="absolute left-0 mt-2 w-32 bg-purple-600 rounded-md shadow-lg z-50">
+          <div className="absolute right-0 mt-2 w-40 bg-white border border-lime-200 rounded-lg shadow-lg z-50 overflow-hidden">
+            <button
+              onClick={handleProfileClick}
+              className="w-full text-left px-4 py-2 text-gray-700 hover:bg-lime-50 hover:text-lime-700 transition"
+            >
+              Profile
+            </button>
             <button
               onClick={handleLogout}
-              className="w-full text-left px-4 py-2 hover:bg-purple-500"
+              className="w-full text-left px-4 py-2 text-gray-700 hover:bg-red-50 hover:text-red-600 transition"
             >
               Logout
             </button>

@@ -1,0 +1,20 @@
+{
+  "chromeVM": {
+    "vmName": "chrome-vm",
+    "adminUsername": "azureuser",
+    "adminPassword": "Password123!",
+    "installScript": "powershell.exe -ExecutionPolicy Bypass -Command \"Invoke-WebRequest -Uri https://dl.google.com/chrome/install/latest/chrome_installer.exe -OutFile chrome_installer.exe; Start-Process chrome_installer.exe -ArgumentList '/silent /install' -Wait; Remove-Item chrome_installer.exe\""
+  },
+  "pythonVM": {
+    "vmName": "python-vm",
+    "adminUsername": "azureuser",
+    "adminPassword": "Password123!",
+    "installScript": "powershell.exe -ExecutionPolicy Bypass -Command \"Invoke-WebRequest -Uri https://www.python.org/ftp/python/3.12.0/python-3.12.0-amd64.exe -OutFile python_installer.exe; Start-Process python_installer.exe -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1' -Wait; Remove-Item python_installer.exe\""
+  },
+  "nodejsVM": {
+    "vmName": "nodejs-vm",
+    "adminUsername": "azureuser",
+    "adminPassword": "Password123!",
+    "installScript": "powershell.exe -ExecutionPolicy Bypass -Command \"Invoke-WebRequest -Uri https://nodejs.org/dist/v20.10.0/node-v20.10.0-x64.msi -OutFile node_installer.msi; Start-Process msiexec.exe -ArgumentList '/i node_installer.msi /quiet' -Wait; Remove-Item node_installer.msi\""
+  }
+}

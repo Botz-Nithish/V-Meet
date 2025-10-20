@@ -1,8 +1,9 @@
-// Import dependencies
-const express = require('express');
-const sql = require('mssql');
-const dotenv = require('dotenv');
-const cors = require('cors');
+import express from "express";
+import sql from "mssql";
+import dotenv from "dotenv";
+import cors from "cors";
+import { createVM } from "./create-VM.js";
+import { deleteVM } from "./create-VM.js";
 
 dotenv.config();
 
@@ -244,6 +245,172 @@ app.post('/api/teacher/students/list', async (req, res) => {
         console.error(err);
         res.status(500).json({ success: false, message: "Server error" });
     }
+});
+
+app.post('/api/admin/vm/approve', async (req, res) => {
+    const { requestId } = req.body;
+    if (!requestId)
+        return res.status(400).json({ success: false, message: "Request ID required" });
+
+    try {
+        const pool = await connectDB();
+
+        // 1️⃣ Fetch pending request
+        const reqData = await pool.request()
+            .input("id", sql.Int, requestId)
+            .query("SELECT * FROM dbo.VMRequests WHERE id = @id AND isApproved = 0");
+
+        if (reqData.recordset.length === 0)
+            return res.status(404).json({ success: false, message: "No pending request found" });
+
+        const { teacherEmail, courseName, vmType } = reqData.recordset[0];
+
+        // 2️⃣ Fetch all students for that course
+        const students = await pool.request()
+            .input("courseName", sql.VarChar, courseName)
+            .query("SELECT email FROM dbo.TeacherClasses WHERE CourseName = @courseName");
+
+        if (students.recordset.length === 0)
+            return res.status(404).json({ success: false, message: "No students found for this course" });
+
+        // 3️⃣ Mark request approved
+        await pool.request()
+            .input("id", sql.Int, requestId)
+            .query("UPDATE dbo.VMRequests SET isApproved = 1 WHERE id = @id");
+
+        const createdVMs = [];
+
+        // 4️⃣ Create VM for each student
+        for (const student of students.recordset) {
+            const email = student.email;
+            const rollMatch = email.match(/(\d+)/);
+            const rollNumber = rollMatch ? rollMatch[0] : "000";
+            const username = rollNumber; // 👈 personalized username
+            const last3 = rollNumber.slice(-3);
+            const password = `${last3}@Rec#2025`;
+            const vmName = `${courseName}-${last3}`; // 👈 unique VM name
+
+            console.log(`Creating VM for ${email} (${username}/${password})`);
+
+            // ✅ Pass student-specific info to createVM
+            const vmInfo = await createVM(vmType, vmName, username, password);
+            const safeVmName = vmInfo.vmName; // Use sanitized name returned by createVM()
+
+            // Insert into StudentVMs
+            const createdAt = new Date();
+            const autoDeleteAt = new Date(createdAt.getTime() + 3 * 60 * 60 * 1000); // +3 hours
+
+            await pool.request()
+                .input("studentEmail", sql.VarChar, email)
+                .input("courseName", sql.VarChar, courseName)
+                .input("vmType", sql.VarChar, vmType)
+                .input("vmName", sql.VarChar, vmInfo.vmName) // ✅ new line
+                .input("vmIp", sql.VarChar, vmInfo.ipAddress)
+                .input("vmUsername", sql.VarChar, username)
+                .input("vmPassword", sql.VarChar, password)
+                .input("autoDeleteAt", sql.DateTime, autoDeleteAt)
+                .query(`
+    INSERT INTO dbo.StudentVMs (studentEmail, courseName, vmType, vmName, vmIp, vmUsername, vmPassword, autoDeleteAt)
+    VALUES (@studentEmail, @courseName, @vmType, @vmName, @vmIp, @vmUsername, @vmPassword, @autoDeleteAt)
+  `);
+
+
+
+            createdVMs.push({ email, ip: vmInfo.ipAddress, username, password, vmName });
+
+            // 🕒 Schedule deletion after 3 hours
+            setTimeout(async () => {
+                console.log(`🕒 Auto-deleting VM for ${email}: ${safeVmName}`);
+                await deleteVM(safeVmName);
+
+                // Delete from DB
+                await pool.request()
+                    .input("studentEmail", sql.VarChar, email)
+                    .query("DELETE FROM dbo.StudentVMs WHERE studentEmail = @studentEmail");
+
+                console.log(`🗑️ VM and record for ${email} deleted successfully.`);
+            }, 10800000);
+        }
+
+
+        res.json({
+            success: true,
+            message: "VMs created successfully (auto-deletion in 3 hours)",
+            data: createdVMs
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+});
+
+app.post('/api/teacher/vm/request', async (req, res) => {
+    const { teacherEmail, courseName, vmType } = req.body;
+
+    if (!teacherEmail || !courseName || !vmType)
+        return res.status(400).json({ success: false, message: "Missing required fields" });
+
+    try {
+        const pool = await connectDB();
+        await pool.request()
+            .input("teacherEmail", sql.VarChar, teacherEmail)
+            .input("courseName", sql.VarChar, courseName)
+            .input("vmType", sql.VarChar, vmType)
+            .query(`INSERT INTO dbo.VMRequests (teacherEmail, courseName, vmType, isApproved) VALUES (@teacherEmail, @courseName, @vmType, 0)`);
+
+        res.json({ success: true, message: "VM Request submitted for admin approval" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+});
+
+
+app.post('/api/student/vm/list', async (req, res) => {
+    const { email } = req.body;
+    if (!email)
+        return res.status(400).json({ success: false, message: "Email is required" });
+
+    try {
+        const pool = await connectDB();
+        const result = await pool.request()
+            .input("email", sql.VarChar, email)
+            .query("SELECT * FROM dbo.StudentVMs WHERE studentEmail = @email");
+
+        res.json({ success: true, vms: result.recordset || [] });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+});
+
+// 🧾 Admin API - List all VM Requests
+app.get('/api/admin/vm/requests', async (req, res) => {
+  try {
+    const pool = await connectDB();
+
+    // Fetch all VM requests (pending + approved)
+    const result = await pool.request().query(`
+      SELECT 
+        id,
+        teacherEmail,
+        courseName,
+        vmType,
+        isApproved,
+        created_at
+      FROM dbo.VMRequests
+      ORDER BY created_at DESC
+    `);
+
+    res.json({
+      success: true,
+      total: result.recordset.length,
+      requests: result.recordset
+    });
+  } catch (err) {
+    console.error("❌ Error fetching VM requests:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 });
 
 

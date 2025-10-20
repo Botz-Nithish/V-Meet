@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
@@ -12,8 +13,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@azure/arm-compute": "^23.1.0",
+    "@azure/arm-network": "^34.0.0",
+    "@azure/arm-resources": "^7.0.0",
+    "@azure/identity": "^4.13.0",
     "cors": "^2.8.5",
-    "dotenv": "^17.2.1",
+    "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "mssql": "^11.0.1"
   },
