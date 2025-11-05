@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import Notify from "../components/notify";
-import { Clock, Server, Copy, Shield } from "lucide-react";
+import { Clock, Server, Copy, Shield, PlusCircle } from "lucide-react";
 
 const Student = () => {
   const [user, setUser] = useState(null);
@@ -13,6 +13,12 @@ const Student = () => {
     message: "",
     type: "success",
   });
+
+  // 🔹 New: form state
+  const [courseName, setCourseName] = useState("");
+  const [vmType, setVmType] = useState("pythonVM");
+  const [requestLoading, setRequestLoading] = useState(false);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -54,7 +60,6 @@ const Student = () => {
       const data = await res.json();
 
       if (data.success) {
-        // Map DB fields correctly
         const mapped = data.vms.map((vm) => ({
           courseName: vm.courseName,
           vmType: vm.vmType,
@@ -90,6 +95,51 @@ const Student = () => {
     setLoading(false);
   };
 
+  // 🔹 New: request VM handler
+  const handleRequestVM = async (e) => {
+    e.preventDefault();
+
+    if (!courseName.trim()) {
+      setNotification({
+        show: true,
+        message: "Please enter your course name.",
+        type: "error",
+      });
+      return;
+    }
+
+    setRequestLoading(true);
+    try {
+      const res = await fetch("http://localhost:5000/api/student/vm/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentEmail: user.email,
+          courseName,
+          vmType,
+        }),
+      });
+
+      const data = await res.json();
+
+      setNotification({
+        show: true,
+        message: data.message,
+        type: data.success ? "success" : "error",
+      });
+
+      if (data.success) setCourseName("");
+    } catch (err) {
+      console.error("Error requesting VM:", err);
+      setNotification({
+        show: true,
+        message: "Server error while requesting VM.",
+        type: "error",
+      });
+    }
+    setRequestLoading(false);
+  };
+
   useEffect(() => {
     if (user?.email) fetchVMs(user.email);
   }, [user]);
@@ -116,6 +166,55 @@ const Student = () => {
           <span className="text-gray-600">Email:</span>{" "}
           <em className="text-gray-700">{user.email}</em>
         </p>
+      </div>
+
+      {/* 🔹 Request VM Form */}
+      <div className="max-w-xl mx-auto bg-white rounded-2xl shadow-md border border-lime-300 p-6 mb-12">
+        <h2 className="text-2xl font-semibold text-lime-700 mb-4 flex items-center gap-2">
+          <PlusCircle size={22} /> Request a Virtual Machine
+        </h2>
+
+        <form onSubmit={handleRequestVM} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Course Name
+            </label>
+            <input
+              type="text"
+              value={courseName}
+              onChange={(e) => setCourseName(e.target.value)}
+              placeholder="e.g. Cloud Computing"
+              className="w-full border border-lime-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-lime-400"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Select VM Type
+            </label>
+            <select
+              value={vmType}
+              onChange={(e) => setVmType(e.target.value)}
+              className="w-full border border-lime-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-lime-400"
+            >
+              <option value="pythonVM">Python VM</option>
+              <option value="chromeVM">Chrome VM</option>
+              <option value="nodejsVM">NodeJS VM</option>
+            </select>
+          </div>
+
+          <button
+            type="submit"
+            disabled={requestLoading}
+            className={`w-full py-2 rounded-lg font-semibold text-white transition ${
+              requestLoading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-lime-600 hover:bg-lime-700"
+            }`}
+          >
+            {requestLoading ? "Submitting..." : "Request VM"}
+          </button>
+        </form>
       </div>
 
       {/* Active VMs */}
