@@ -372,7 +372,13 @@ app.post("/api/student/chat", async (req, res) => {
     }
 });
 
-
+app.get("/", (req, res) => {
+  res.json({
+    message: "✅ V-Meet backend is running successfully on Azure!",
+    environment: process.env.NODE_ENV || "development",
+    time: new Date().toISOString(),
+  });
+});
 
 
 // ----------------------------------------------------
