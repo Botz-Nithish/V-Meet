@@ -19,7 +19,7 @@ jobs:
       - name: Use Node.js (change version to match your App Service)
         uses: actions/setup-node@v4
         with:
-          node-version: '18.x'
+           node-version: '20.x' 
 
       - name: Install, build and test (backend)
         working-directory: ./backend
