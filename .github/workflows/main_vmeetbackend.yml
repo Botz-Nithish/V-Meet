@@ -61,6 +61,6 @@ jobs:
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'vmeetbackend' # must match your Azure App Service name
+          app-name: 'vmeetbackend' 
           slot-name: 'Production'
-          package: .
+          package: ./backend
