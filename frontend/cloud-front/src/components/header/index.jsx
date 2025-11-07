@@ -29,7 +29,7 @@ const Header = () => {
   if (!user) return null;
 
   return (
-    <header className="bg-white border-b border-lime-200 shadow-sm flex justify-between items-center px-6 py-3">
+    <header className="bg-white border-b mr-12 border-lime-200 shadow-sm flex justify-between items-center px-6 py-3">
       {/* App Logo / Name */}
       <div
         onClick={() => navigate(user.isTeacher ? "/teacher" : "/student")}

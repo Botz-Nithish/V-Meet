@@ -1,16 +1,17 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import dayjs from "dayjs";
 import {
-  login,
-  signup,
-  listCourses,
-  addCourse,
-  addStudent,
-  listStudents,
-  approveVM,
-  connectDB,
-  studentRequestVM,
+    login,
+    signup,
+    listCourses,
+    addCourse,
+    addStudent,
+    listStudents,
+    approveVM,
+    connectDB,
+    studentRequestVM,
 } from "./functions.js";
 import sql from "mssql"; // ✅ add this line
 
@@ -24,121 +25,120 @@ await connectDB();
 
 // AUTH
 app.post("/api/login", async (req, res) => {
-  const { email, password } = req.body;
-  const response = await login(email, password);
-  res.status(response.success ? 200 : 400).json(response);
+    const { email, password } = req.body;
+    const response = await login(email, password);
+    res.status(response.success ? 200 : 400).json(response);
 });
 
 app.post("/api/signup", async (req, res) => {
-  const { fullname, email, password } = req.body;
-  const response = await signup(fullname, email, password);
-  res.status(response.success ? 200 : 400).json(response);
+    const { fullname, email, password } = req.body;
+    const response = await signup(fullname, email, password);
+    res.status(response.success ? 200 : 400).json(response);
 });
 
 // TEACHER
 app.post("/api/teacher/courses/list", async (req, res) => {
-  try {
-    const data = await listCourses(req.body.teacherName);
-    res.json({ success: true, courses: data });
-  } catch (e) {
-    console.error("❌ /api/teacher/courses/list error:", e);
-    res.status(500).json({ success: false, message: e.message });
-  }
+    try {
+        const data = await listCourses(req.body.teacherName);
+        res.json({ success: true, courses: data });
+    } catch (e) {
+        console.error("❌ /api/teacher/courses/list error:", e);
+        res.status(500).json({ success: false, message: e.message });
+    }
 });
 
 app.post("/api/teacher/courses/add", async (req, res) => {
-  try {
-    const { teacherName, courseName } = req.body;
-    const response = await addCourse(teacherName, courseName);
-    res.json(response);
-  } catch (e) {
-    console.error("❌ /api/teacher/courses/add error:", e);
-    res.status(500).json({ success: false, message: e.message });
-  }
+    try {
+        const { teacherName, courseName } = req.body;
+        const response = await addCourse(teacherName, courseName);
+        res.json(response);
+    } catch (e) {
+        console.error("❌ /api/teacher/courses/add error:", e);
+        res.status(500).json({ success: false, message: e.message });
+    }
 });
 
 app.post("/api/teacher/students/add", async (req, res) => {
-  try {
-    const { teacherName, studentEmail, courseName } = req.body;
-    const response = await addStudent(teacherName, studentEmail, courseName);
-    res.json(response);
-  } catch (e) {
-    console.error("❌ /api/teacher/students/add error:", e);
-    res.status(500).json({ success: false, message: e.message });
-  }
+    try {
+        const { teacherName, studentEmail, courseName } = req.body;
+        const response = await addStudent(teacherName, studentEmail, courseName);
+        res.json(response);
+    } catch (e) {
+        console.error("❌ /api/teacher/students/add error:", e);
+        res.status(500).json({ success: false, message: e.message });
+    }
 });
 
 app.post("/api/teacher/students/list", async (req, res) => {
-  try {
-    const { teacherName, courseName } = req.body;
-    const students = await listStudents(teacherName, courseName);
-    res.json({ success: true, students });
-  } catch (e) {
-    console.error("❌ /api/teacher/students/list error:", e);
-    res.status(500).json({ success: false, message: e.message });
-  }
+    try {
+        const { teacherName, courseName } = req.body;
+        const students = await listStudents(teacherName, courseName);
+        res.json({ success: true, students });
+    } catch (e) {
+        console.error("❌ /api/teacher/students/list error:", e);
+        res.status(500).json({ success: false, message: e.message });
+    }
 });
 
 // ADMIN
 app.post("/api/admin/vm/approve", async (req, res) => {
-  try {
-    const { requestId } = req.body;
-    const response = await approveVM(requestId);
-    res.status(response.success ? 200 : 400).json(response);
-  } catch (e) {
-    console.error("❌ /api/admin/vm/approve error:", e);
-    res.status(500).json({ success: false, message: e.message });
-  }
+    try {
+        const { requestId } = req.body;
+        const response = await approveVM(requestId);
+        res.status(response.success ? 200 : 400).json(response);
+    } catch (e) {
+        console.error("❌ /api/admin/vm/approve error:", e);
+        res.status(500).json({ success: false, message: e.message });
+    }
 });
 
 // STUDENT
 app.post("/api/student/vm/request", async (req, res) => {
-  const { studentEmail, courseName, vmType } = req.body;
-  if (!studentEmail || !courseName || !vmType)
-    return res
-      .status(400)
-      .json({ success: false, message: "Missing required fields" });
+    const { studentEmail, courseName, vmType } = req.body;
+    if (!studentEmail || !courseName || !vmType)
+        return res
+            .status(400)
+            .json({ success: false, message: "Missing required fields" });
 
-  try {
-    const response = await studentRequestVM(studentEmail, courseName, vmType);
-    res.status(response.success ? 200 : 400).json(response);
-  } catch (err) {
-    console.error("❌ /api/student/vm/request error:", err);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
+    try {
+        const response = await studentRequestVM(studentEmail, courseName, vmType);
+        res.status(response.success ? 200 : 400).json(response);
+    } catch (err) {
+        console.error("❌ /api/student/vm/request error:", err);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
 });
 
 
 // STUDENT: List their active VMs
 app.post("/api/student/vm/list", async (req, res) => {
-  const { email } = req.body;
+    const { email } = req.body;
 
-  if (!email)
-    return res.status(400).json({ success: false, message: "Email is required" });
+    if (!email)
+        return res.status(400).json({ success: false, message: "Email is required" });
 
-  try {
-    const pool = await connectDB();
-    const result = await pool
-      .request()
-      .input("email", sql.VarChar, email)
-      .query("SELECT * FROM dbo.StudentVMs WHERE studentEmail = @email");
+    try {
+        const pool = await connectDB();
+        const result = await pool
+            .request()
+            .input("email", sql.VarChar, email)
+            .query("SELECT * FROM dbo.StudentVMs WHERE studentEmail = @email");
 
-    res.json({
-      success: true,
-      vms: result.recordset || [],
-    });
-  } catch (err) {
-    console.error("❌ /api/student/vm/list error:", err);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
+        res.json({
+            success: true,
+            vms: result.recordset || [],
+        });
+    } catch (err) {
+        console.error("❌ /api/student/vm/list error:", err);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
 });
 
 
-// 🧾 ADMIN: List all VM requests (must be above app.listen)
 app.get("/api/admin/vm/requests", async (req, res) => {
-  try {
-    const pool = await connectDB();
-    const result = await pool.request().query(`
+    try {
+        const pool = await connectDB();
+        const result = await pool.request().query(`
       SELECT 
         id,
         teacherEmail,
@@ -150,16 +150,230 @@ app.get("/api/admin/vm/requests", async (req, res) => {
       ORDER BY created_at DESC
     `);
 
-    res.json({
-      success: true,
-      total: result.recordset.length,
-      requests: result.recordset,
-    });
-  } catch (err) {
-    console.error("❌ Error fetching VM requests:", err);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
+        const requests = result.recordset;
+
+        if (!requests.length) {
+            return res.json({
+                success: true,
+                total: 0,
+                requests: [],
+                aiSummary: "No VM requests found in the database.",
+            });
+        }
+
+        // 🧮 Compute Weekly Stats
+        const now = dayjs();
+        const oneWeekAgo = now.subtract(7, "day");
+        const thisWeek = requests.filter((r) => dayjs(r.created_at).isAfter(oneWeekAgo));
+
+        const totalThisWeek = thisWeek.length;
+        const approvedThisWeek = thisWeek.filter((r) => r.isApproved === 1).length;
+        const pendingThisWeek = thisWeek.filter((r) => r.isApproved === 0).length;
+        const totalApproved = requests.filter((r) => r.isApproved === 1).length;
+        const totalPending = requests.filter((r) => r.isApproved === 0).length;
+
+        // 🧠 AI Summary using Gemini
+        const geminiApiKey = process.env.GEMINI_API_KEY;
+        const geminiModel = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+
+        let aiSummary = "No AI summary generated.";
+
+        if (geminiApiKey) {
+            const systemPrompt = `
+      You are "EduAI Analytics", a data analyst assistant for the Virtual Lab Admin Dashboard.
+      Using the provided VM request statistics, generate a concise, insightful summary (max 150 words).
+      Focus on weekly activity, approval trends, and actionable insights.
+      Give the answer in a single String no need of Boldness
+      `;
+
+            const context = `
+      Total Requests: ${requests.length}
+      Total Approved: ${totalApproved}
+      Total Pending: ${totalPending}
+      This Week: ${totalThisWeek} total
+      Approved This Week: ${approvedThisWeek}
+      Pending This Week: ${pendingThisWeek}
+      `;
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiApiKey}`;
+            const payload = {
+                contents: [
+                    {
+                        parts: [
+                            { text: systemPrompt },
+                            { text: context },
+                        ],
+                    },
+                ],
+            };
+
+            try {
+                const aiResponse = await fetch(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                });
+
+                const aiData = await aiResponse.json();
+                aiSummary =
+                    aiData?.candidates?.[0]?.content?.parts?.[0]?.text ||
+                    "AI summary could not be generated.";
+            } catch (aiErr) {
+                console.warn("⚠️ Gemini API call failed:", aiErr.message);
+                aiSummary = "Gemini summary service unavailable.";
+            }
+        } else {
+            aiSummary = "Gemini API key not configured.";
+        }
+
+        // ✅ Return full dataset + AI summary
+        res.json({
+            success: true,
+            total: requests.length,
+            requests, // original recordset
+            aiSummary, // extra descriptive field
+        });
+    } catch (err) {
+        console.error("❌ Error fetching VM requests:", err);
+        res.status(500).json({
+            success: false,
+            message: "Server error",
+            details: err.message,
+        });
+    }
 });
+// TEACHER: GenAI Chat Assistant (Gemini Version)
+app.post("/api/teacher/chat", async (req, res) => {
+    const { message } = req.body;
+    if (!message)
+        return res.status(400).json({ success: false, message: "Message is required" });
+
+    try {
+        const geminiApiKey = process.env.GEMINI_API_KEY;
+        const geminiModel = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+
+        if (!geminiApiKey)
+            return res.status(500).json({ success: false, message: "Gemini API key missing" });
+
+        const systemRole = `
+        You are "EduAI", a virtual lab assistant for TEACHERS using the V-Meet Portal.
+        Help teachers with:
+        - Creating classes using 'Add Class'
+        - Adding students using 'Save Student'
+        - Requesting VMs (Python, Chrome, NodeJS)
+        - Understanding VM statuses (Pending / Approved)
+        Respond clearly, step-by-step, and only about teacher tasks in the portal.
+        If asked something outside your scope, say:
+        "I can only assist with the Virtual Lab Teacher Portal."
+        Give the answer in a single String no need of Boldness or Spacing.
+        `;
+
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiApiKey}`;
+
+        const payload = {
+            contents: [
+                {
+                    parts: [
+                        { text: systemRole },
+                        { text: message }
+                    ]
+                }
+            ]
+        };
+
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+        });
+
+        const data = await response.json();
+        const reply =
+            data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+            "Sorry, I couldn’t generate a response.";
+
+        res.json({ success: true, functionCode: 101, reply });
+    } catch (err) {
+        console.error("❌ /api/teacher/chat (Gemini) error:", err);
+        res.status(500).json({
+            success: false,
+            message: "Server error",
+            details: err.message,
+        });
+    }
+});
+
+// STUDENT: GenAI Chat Assistant (Gemini Version)
+app.post("/api/student/chat", async (req, res) => {
+    const { message } = req.body;
+    if (!message)
+        return res.status(400).json({ success: false, message: "Message is required" });
+
+    try {
+        const geminiApiKey = process.env.GEMINI_API_KEY;
+        const geminiModel = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+
+        if (!geminiApiKey)
+            return res.status(500).json({ success: false, message: "Gemini API key missing" });
+
+        // 🧠 Student-specific system role
+        const systemRole = `
+        You are "EduAI", a helpful virtual lab assistant for STUDENTS using the V-Meet Portal.
+        You help students:
+        - View their allocated Virtual Machines (VMs)
+        - Understand VM details (IP Address, Username, Password)
+        - Connect to their VM using the RDP command format: "mstsc /v:<IP_ADDRESS>"
+        - Explain what each field means and how to use it safely
+        - Remind them to copy their RDP command and paste it into Windows Run (Win+R)
+        - Warn that VMs auto-delete after the shown remaining time, and they should save work early
+        - If the student has issues connecting, tell them to verify IP, network, or contact the teacher
+        - If asked about other portal areas, politely decline with:
+          "I can only help you with Virtual Machine access and usage."
+        Respond in a friendly, step-by-step way.
+        Give the answer in a single String no need of Boldness
+        `;
+
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiApiKey}`;
+
+        const payload = {
+            contents: [
+                {
+                    parts: [
+                        { text: systemRole },
+                        { text: message }
+                    ]
+                }
+            ]
+        };
+
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+        });
+
+        const data = await response.json();
+        const reply =
+            data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+            "Sorry, I couldn’t generate a response.";
+
+        res.json({ success: true, functionCode: 102, reply });
+    } catch (err) {
+        console.error("❌ /api/student/chat (Gemini) error:", err);
+        res.status(500).json({
+            success: false,
+            message: "Server error",
+            details: err.message,
+        });
+    }
+});
+
+
+
 
 // ----------------------------------------------------
 const PORT = process.env.PORT || 5000;

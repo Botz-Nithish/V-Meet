@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import Notify from "../components/notify";
-import { Clock, Server, Copy, Shield, PlusCircle } from "lucide-react";
+import { Clock, Server, Copy, Shield, PlusCircle, MessageCircle, Loader } from "lucide-react";
+import TextType from "../components/TextType/TextType";
 
 const Student = () => {
   const [user, setUser] = useState(null);
@@ -18,6 +19,12 @@ const Student = () => {
   const [courseName, setCourseName] = useState("");
   const [vmType, setVmType] = useState("pythonVM");
   const [requestLoading, setRequestLoading] = useState(false);
+
+  // 🔹 New: chat state
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatMessage, setChatMessage] = useState("");
+  const [chatHistory, setChatHistory] = useState([]);
+  const [isTyping, setIsTyping] = useState(false);
 
   const navigate = useNavigate();
 
@@ -140,6 +147,39 @@ const Student = () => {
     setRequestLoading(false);
   };
 
+  // 🔹 New: chat handler
+  const handleChatSubmit = async (e) => {
+    e.preventDefault();
+    if (!chatMessage.trim()) return;
+
+    // Add user message to chat
+    setChatHistory(prev => [...prev, { role: 'user', content: chatMessage }]);
+    
+    setIsTyping(true);
+    setChatMessage("");
+    
+    try {
+      const response = await fetch("http://localhost:5000/api/student/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: chatMessage }),
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        setChatHistory(prev => [...prev, { 
+          role: 'assistant', 
+          content: data.reply,
+          isNew: true 
+        }]);
+      }
+    } catch (err) {
+      console.error("Chat error:", err);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
   useEffect(() => {
     if (user?.email) fetchVMs(user.email);
   }, [user]);
@@ -147,7 +187,7 @@ const Student = () => {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-lime-50 via-white to-lime-100 text-gray-900 p-8 font-sans">
+    <div className={`min-h-screen bg-gradient-to-br from-lime-50 via-white to-lime-100 text-gray-900 ${isChatOpen ? 'mr-96' : 'mr-16'} transition-all duration-300`}>
       <Notify
         message={notification.message}
         show={notification.show}
@@ -302,6 +342,89 @@ const Student = () => {
             })}
           </div>
         )}
+      </div>
+
+      {/* Add Chat Section */}
+      <div className={`fixed right-0 top-0 h-full bg-white shadow-lg transition-all duration-300 ${isChatOpen ? 'w-96' : 'w-16'} border-l border-lime-200`}>
+        <div className="h-full flex flex-col">
+          {/* Chat Header */}
+          <div className="p-4 border-b border-lime-200 flex items-center justify-between bg-white">
+            {isChatOpen && <h3 className="font-semibold text-lime-600">AI Assistant</h3>}
+            <button
+              onClick={() => setIsChatOpen(!isChatOpen)}
+              className="p-2 hover:bg-lime-100 rounded-lg transition-colors"
+            >
+              <MessageCircle size={20} className="text-lime-600" />
+            </button>
+          </div>
+
+          {/* Chat Messages */}
+          {isChatOpen && (
+            <>
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {chatHistory.map((msg, idx) => (
+                  <div
+                    key={idx}
+                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[80%] rounded-lg p-3 ${
+                        msg.role === 'user'
+                          ? 'bg-lime-600 text-white'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}
+                    >
+                      {msg.role === 'assistant' && msg.isNew ? (
+                        <TextType 
+                          text={[msg.content]}
+                          typingSpeed={25}
+                          pauseDuration={1500}
+                          showCursor={true}
+                          cursorCharacter="_"
+                          loop={false}
+                        />
+                      ) : (
+                        msg.content
+                      )}
+                    </div>
+                  </div>
+                ))}
+                
+                {/* Loading indicator */}
+                {isTyping && (
+                  <div className="flex justify-start">
+                    <div className="bg-gray-100 rounded-lg p-3">
+                      <Loader className="w-5 h-5 animate-spin text-lime-600" />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Chat Input */}
+              <form onSubmit={handleChatSubmit} className="p-4 border-t border-lime-200">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={chatMessage}
+                    onChange={(e) => setChatMessage(e.target.value)}
+                    placeholder="Ask me anything..."
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-lime-500 outline-none"
+                    disabled={isTyping}
+                  />
+                  <button
+                    type="submit"
+                    className={`px-4 py-2 bg-lime-600 text-white rounded-lg transition ${
+                      isTyping ? 'opacity-50 cursor-not-allowed' : 'hover:bg-lime-700'
+                    }`}
+                    disabled={isTyping}
+                  >
+                    Send
+                  </button>
+                </div>
+              </form>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

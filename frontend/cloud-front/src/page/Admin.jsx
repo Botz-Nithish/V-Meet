@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import apiFetch from "../components/apifetch/index";
 import Notify from "../components/notify";
+import TextType from "../components/TextType/TextType";
 
 const AdminPortal = () => {
   const [requests, setRequests] = useState([]);
@@ -11,6 +12,7 @@ const AdminPortal = () => {
     message: "",
     type: "success",
   });
+  const [aiSummary, setAiSummary] = useState(""); // New state for AI summary
 
   // ✅ Fetch all VM requests
   const fetchVmRequests = async () => {
@@ -20,6 +22,7 @@ const AdminPortal = () => {
       const data = await res.json();
       if (data.success) {
         setRequests(data.requests);
+        setAiSummary(data.aiSummary); // Store the AI summary
       } else {
         setNotification({
           show: true,
@@ -86,6 +89,25 @@ const AdminPortal = () => {
     setPendingApprovals((prev) => prev.filter((id) => id !== requestId));
   };
 
+  // Add this function before the return statement
+  const formatBoldText = (text) => {
+    // Split by bold markers ** and process alternating chunks
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+
+    return parts.map((part, index) => {
+      if (part.startsWith("**") && part.endsWith("**")) {
+        // Remove ** and wrap in strong tag
+        const boldText = part.slice(2, -2);
+        return (
+          <strong key={index} className="font-bold">
+            {boldText}
+          </strong>
+        );
+      }
+      return part;
+    });
+  };
+
   useEffect(() => {
     fetchVmRequests();
   }, []);
@@ -104,6 +126,28 @@ const AdminPortal = () => {
       <h1 className="text-4xl font-extrabold text-center text-lime-600 mb-10">
         Admin Portal – VM Requests
       </h1>
+
+      {/* Add AI Summary Section */}
+      {aiSummary && (
+        <div className="max-w-4xl mx-auto mb-8 bg-white rounded-2xl shadow-md border border-lime-200 p-6">
+          <h2 className="text-xl font-semibold text-lime-700 mb-4">
+            AI Analysis Summary
+          </h2>
+          <div className="bg-gray-50 rounded-lg p-4 text-gray-700">
+            <TextType
+              text={[aiSummary]}
+              typingSpeed={25}
+              pauseDuration={1500}
+              showCursor={true}
+              cursorCharacter="_"
+              loop={false}
+              className="leading-relaxed"
+              as="div"
+              render={(text) => <span>{formatBoldText(text)}</span>}
+            />
+          </div>
+        </div>
+      )}
 
       {/* ✅ Requests Table */}
       <div className="bg-white rounded-2xl shadow-md border border-lime-200 p-6 transition hover:shadow-lg">
