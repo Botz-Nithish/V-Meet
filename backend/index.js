@@ -21,7 +21,12 @@ app.use(express.json());
 app.use(cors());
 
 // ✅ Initialize DB connection first (before server starts)
-await connectDB();
+try {
+  await connectDB();
+  console.log("✅ Database connected successfully");
+} catch (err) {
+  console.error("❌ Database connection failed:", err.message);
+}
 
 // AUTH
 app.post("/api/login", async (req, res) => {
