@@ -1,12 +1,4 @@
-
-# =========================================
-# 🚀 Build and Deploy Node.js App to Azure
-# =========================================
-# Docs: https://github.com/Azure/webapps-deploy
-# Uses secret: AZURE_CREDENTIALS (from Azure CLI JSON output)
-# =========================================
-
-name: Build and deploy Node.js app to Azure Web App -V MEet
+name: Build and deploy Node.js backend to Azure Web App - vmeetbackend
 
 on:
   push:
@@ -21,24 +13,26 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Set up Node.js version
-        uses: actions/setup-node@v3
+      - name: Use Node.js (change version to match your App Service)
+        uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+           node-version: '20.x' 
 
-      - name: Install dependencies and build
+      - name: Install, build and test (backend)
+        working-directory: ./backend
         run: |
-          cd backend
-          npm install
+          npm ci
           npm run build --if-present
+          npm run test --if-present
 
-      - name: Upload artifact for deployment job
+      - name: Upload backend artifact
         uses: actions/upload-artifact@v4
         with:
-          name: node-app
-          path: backend
+          name: backend-package
+          path: ./backend    # only upload the backend folder
 
   deploy:
     runs-on: ubuntu-latest
@@ -48,12 +42,13 @@ jobs:
       contents: read
 
     steps:
-      - name: Download artifact from build job
+      - name: Download backend artifact
         uses: actions/download-artifact@v4
         with:
-          name: node-app
+          name: backend-package
+          path: ./backend-deploy
 
-      - name: Login to Azure
+      - name: Login to Azure (using service principal JSON in AZURE_CREDENTIALS)
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
@@ -61,6 +56,6 @@ jobs:
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'vmeetbackend' 
-          slot-name: 'Production'
-          package: ./backend
+          app-name: 'vmeetbackend'   
+          slot-name: 'production'
+          package: ./backend   
