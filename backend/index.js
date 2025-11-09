@@ -18,7 +18,22 @@ import sql from "mssql"; // ✅ add this line
 dotenv.config();
 const app = express();
 app.use(express.json());
-app.use(cors());
+
+const allowedOrigins = [
+  "https://polite-field-0c534db00.3.azurestaticapps.net", // your frontend
+  "http://localhost:5173", // optional: for local testing
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error("CORS not allowed for this origin"));
+  },
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
+}));
 
 // ✅ Initialize DB connection first (before server starts)
 try {
