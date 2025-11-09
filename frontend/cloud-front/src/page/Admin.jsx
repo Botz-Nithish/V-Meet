@@ -18,7 +18,7 @@ const AdminPortal = () => {
   const fetchVmRequests = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/admin/vm/requests");
+      const res = await fetch("https://vmeetbackend.azurewebsites.net/api/admin/vm/requests");
       const data = await res.json();
       if (data.success) {
         setRequests(data.requests);
@@ -47,7 +47,7 @@ const AdminPortal = () => {
     setPendingApprovals((prev) => [...prev, requestId]);
 
     try {
-      const res = await fetch("http://localhost:5000/api/admin/vm/approve", {
+      const res = await fetch("https://vmeetbackend.azurewebsites.net/api/admin/vm/approve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ requestId }),

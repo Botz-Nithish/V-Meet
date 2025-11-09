@@ -59,7 +59,7 @@ const Student = () => {
   const fetchVMs = async (email) => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/student/vm/list", {
+      const res = await fetch("https://vmeetbackend.azurewebsites.net/api/student/vm/list", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -117,7 +117,7 @@ const Student = () => {
 
     setRequestLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/student/vm/request", {
+      const res = await fetch("https://vmeetbackend.azurewebsites.net/api/student/vm/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -159,7 +159,7 @@ const Student = () => {
     setChatMessage("");
     
     try {
-      const response = await fetch("http://localhost:5000/api/student/chat", {
+      const response = await fetch("https://vmeetbackend.azurewebsites.net/api/student/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: chatMessage }),

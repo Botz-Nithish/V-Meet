@@ -58,7 +58,7 @@ const TeacherPortal = () => {
   // Fetch VM Requests
   const fetchVmRequests = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/admin/vm/requests");
+      const res = await fetch("https://vmeetbackend.azurewebsites.net/api/admin/vm/requests");
       const data = await res.json();
       if (data.success) {
         const filtered = data.requests.filter(
@@ -124,7 +124,7 @@ const TeacherPortal = () => {
   const handleVmRequest = async () => {
     if (!teacherEmail || !selectedVmClass || !vmType) return;
     try {
-      const response = await fetch("http://localhost:5000/api/teacher/vm/request", {
+      const response = await fetch("https://vmeetbackend.azurewebsites.net/api/teacher/vm/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -170,7 +170,7 @@ const TeacherPortal = () => {
     setChatMessage("");
     
     try {
-      const response = await fetch("http://localhost:5000/api/teacher/chat", {
+      const response = await fetch("https://vmeetbackend.azurewebsites.net/api/teacher/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: chatMessage }),

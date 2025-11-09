@@ -1,7 +1,7 @@
 // utils/apiFetch.js
 const apiFetch = async (endpoint, body = {}, method = "POST") => {
     try {
-        const res = await fetch(`http://localhost:5000${endpoint}`, {
+        const res = await fetch(`https://vmeetbackend.azurewebsites.net${endpoint}`, {
             method,
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body),

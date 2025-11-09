@@ -34,7 +34,7 @@ export default function LoginPage() {
     e.preventDefault();
     const endpoint = isLogin ? "/api/login" : "/api/signup";
     try {
-      const res = await fetch(`http://localhost:5000${endpoint}`, {
+      const res = await fetch(`https://vmeetbackend.azurewebsites.net${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
