@@ -101,18 +101,6 @@ export async function addCourse(teacherName, courseName) {
     return { success: true, message: "Course added successfully" };
 }
 
-app.get("/", (req, res) => {
-  res.json({
-    message: "✅ V-Meet backend is running successfully on Azure!",
-    environment: process.env.NODE_ENV || "development",
-    time: new Date().toISOString(),
-  });
-});
-
-// Example route (optional)
-app.get("/api/test", (req, res) => {
-  res.send("Hello from /api/test endpoint!");
-});
 
 // TEACHER: ADD STUDENT
 export async function addStudent(teacherName, studentEmail, courseName) {

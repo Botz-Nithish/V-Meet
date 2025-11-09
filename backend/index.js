@@ -385,6 +385,12 @@ app.get("/", (req, res) => {
   });
 });
 
+// Example route (optional)
+app.get("/api/test", (req, res) => {
+  res.send("Hello from /api/test endpoint!");
+});
+
+
 
 // ----------------------------------------------------
 const PORT = process.env.PORT || 5000;
