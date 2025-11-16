@@ -405,6 +405,27 @@ app.get("/api/test", (req, res) => {
   res.send("Hello from /api/test endpoint!");
 });
 
+app.post('/api/teacher/vm/request', async (req, res) => {
+    const { teacherEmail, courseName, vmType } = req.body;
+
+    if (!teacherEmail || !courseName || !vmType)
+        return res.status(400).json({ success: false, message: "Missing required fields" });
+
+    try {
+        const pool = await connectDB();
+        await pool.request()
+            .input("teacherEmail", sql.VarChar, teacherEmail)
+            .input("courseName", sql.VarChar, courseName)
+            .input("vmType", sql.VarChar, vmType)
+            .query(`INSERT INTO dbo.VMRequests (teacherEmail, courseName, vmType, isApproved) VALUES (@teacherEmail, @courseName, @vmType, 0)`);
+
+        res.json({ success: true, message: "VM Request submitted for admin approval" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+});
+
 
 
 // ----------------------------------------------------
