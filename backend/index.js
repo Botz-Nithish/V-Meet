@@ -206,17 +206,24 @@ app.get("/api/admin/vm/requests", async (req, res) => {
       Give the answer in a single String no need of Boldness
       `;
 
-            const context = `I have attatched a SQL Select Query's response based on that you need to tell if it's response ${requests} the query was 
-                  SELECT 
-        id,
-        teacherEmail,
-        courseName,
-        vmType,
-        isApproved,
-        created_at
-      FROM dbo.VMRequests
-      ORDER BY created_at DESC
-      `;
+            // build a compact, structured context for the AI (avoid [object Object] and huge payloads)
+            // include only the fields the analyst needs and limit rows to 50
+            const sample = requests.slice(0, 50).map(r => ({
+              teacherEmail: r.teacherEmail,
+              courseName: r.courseName,
+              vmType: r.vmType,
+              isApproved: r.isApproved,
+              created_at: r.created_at,
+            }));
+
+            const context = `SQL Query:
+SELECT id, teacherEmail, courseName, vmType, isApproved, created_at
+FROM dbo.VMRequests
+ORDER BY created_at DESC
+
+Data (up to 50 rows) in JSON format:
+${JSON.stringify(sample, null, 2)}
+`;
 
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiApiKey}`;
             const payload = {
