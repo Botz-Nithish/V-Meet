@@ -206,13 +206,16 @@ app.get("/api/admin/vm/requests", async (req, res) => {
       Give the answer in a single String no need of Boldness
       `;
 
-            const context = `
-      Total Requests: ${requests.length}
-      Total Approved: ${totalApproved}
-      Total Pending: ${totalPending}
-      This Week: ${totalThisWeek} total
-      Approved This Week: ${approvedThisWeek}
-      Pending This Week: ${pendingThisWeek}
+            const context = `I have attatched a SQL Select Query's response based on that you need to tell if it's response ${requests} the query was 
+                  SELECT 
+        id,
+        teacherEmail,
+        courseName,
+        vmType,
+        isApproved,
+        created_at
+      FROM dbo.VMRequests
+      ORDER BY created_at DESC
       `;
 
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiApiKey}`;
